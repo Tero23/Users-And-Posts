@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema(
           throw new Error("Your password must contain at least 1 digit!");
       },
     },
+    deletedAt: {
+      type: Date,
+    },
     tokens: [
       {
         token: {

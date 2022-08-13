@@ -54,4 +54,24 @@ router
 
 router.route("/users/login").post(userController.login);
 
+router
+  .route("/me/users/update/:id")
+  .patch(userAuthorization.auth, userController.updateUser);
+
+router
+  .route("/admins/me/users/update/:id")
+  .patch(userAuthorization.adminAuth, userController.updateUserByAdmin);
+
+router
+  .route("/admins/me/update")
+  .patch(userAuthorization.adminAuth, userController.updateMyProfile);
+
+router
+  .route("/me/users/delete/:id")
+  .delete(userAuthorization.auth, userController.deleteUser);
+
+router
+  .route("/admins/me/users/delete/:id")
+  .delete(userAuthorization.adminAuth, userController.deleteUserByAdmin);
+
 module.exports = router;

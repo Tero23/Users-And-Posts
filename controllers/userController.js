@@ -27,7 +27,10 @@ exports.createUserByAdmin = async (req, res) => {
 exports.getAllAdmins = async (req, res) => {
   try {
     const admins = await User.find({ role: "admin" });
-    res.status(200).json({ count: admins.length, admins });
+    const activeAdmins = admins.filter(
+      (admin) => admin.deletedAt === undefined
+    );
+    res.status(200).json({ count: activeAdmins.length, activeAdmins });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -37,7 +40,8 @@ exports.getAllAdmins = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({ role: "user" });
-    res.status(200).json({ count: users.length, users });
+    const activeUsers = users.filter((user) => user.deletedAt === undefined);
+    res.status(200).json({ count: activeUsers.length, activeUsers });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -46,8 +50,12 @@ exports.getAllUsers = async (req, res) => {
 exports.getAllAdminsAndUsers = async (req, res) => {
   try {
     const users = await User.find({ role: "user" });
+    const activeUsers = users.filter((user) => user.deletedAt === undefined);
     const admins = await User.find({ role: "admin" });
-    const everybody = [...users, ...admins];
+    const activeAdmins = admins.filter(
+      (admin) => admin.deletedAt === undefined
+    );
+    const everybody = [...activeUsers, ...activeAdmins];
     res.status(200).json({ count: everybody.length, AllUsers: everybody });
   } catch (error) {
     res.status(500).send(error.message);
@@ -66,7 +74,8 @@ exports.getMyProfile = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params.id });
-    if (!user) throw new Error("There is no such user Id!");
+    if (!user || user.deletedAt !== undefined)
+      throw new Error("There is no such user Id!");
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).send(Error.message);
@@ -79,9 +88,89 @@ exports.login = async (req, res) => {
       req.body.email,
       req.body.password
     );
+    if (user.deletedAt !== undefined) throw new Error("There is no such user!");
     const token = await user.generateAuthTokens();
     await user.save();
     res.status(200).json({ user, token });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["username", "email", "role"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) res.status(404).send({ message: "Invalid Update!" });
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    updates.forEach((update) => (user[update] = req.body[update]));
+    await user.save();
+    res.status(200).json({ message: "User Updated!", user });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+exports.updateUserByAdmin = async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["username", "email", "role"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) res.status(404).send({ message: "Invalid Update!" });
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    if (user.role !== "user") throw new Error("You can only update users!");
+    updates.forEach((update) => (user[update] = req.body[update]));
+    await user.save();
+    res.status(200).json({ message: "User Updated!", user });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+exports.updateMyProfile = async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["username", "email", "role"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) res.status(404).send({ message: "Invalid Update!" });
+  try {
+    const user = await User.findOne({ _id: req.user.id });
+    updates.forEach((update) => (user[update] = req.body[update]));
+    await user.save();
+    res.status(200).json({ message: "User Updated!", user });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    const now = new Date();
+    user.deletedAt = now;
+    user.tokens = [];
+    await user.save();
+    res.json({ message: "User deleted!", user });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+exports.deleteUserByAdmin = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id });
+    const now = new Date();
+    if (user.role !== "user") throw new Error("You cannot delete Admins!");
+    user.deletedAt = now;
+    user.tokens = [];
+    await user.save();
+    res.json({ message: "User deleted!", user });
   } catch (error) {
     res.status(500).send(error.message);
   }
