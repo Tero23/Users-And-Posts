@@ -6,20 +6,21 @@ const userAuthorization = require("../middlewares/authorization");
 const express = require("express");
 const router = express.Router();
 
-router.route("/me").post(async (req, res) => {
-  const me = new User({
-    username: "Tro",
-    role: "superAdmin",
-    email: "doumaniant@gmail.com",
-    password: process.env.MY_PASSWORD,
-  });
-  const token = await me.generateAuthTokens();
-  res.status(200).json({ msg: "Super Admin Created!" });
-});
+// router.route("/me").post(async (req, res) => {
+//   const me = new User({
+//     username: "Tro",
+//     role: "superAdmin",
+//     email: "doumaniant@gmail.com",
+//     password: process.env.MY_PASSWORD,
+//   });
+//   const token = await me.generateAuthTokens();
+//   res.status(200).json({ msg: "Super Admin Created!" });
+// });
 
 router
   .route("/me/admins")
-  .get(userAuthorization.auth, userController.getAllAdmins);
+  .get(userAuthorization.auth, userController.getAllAdmins)
+  .post(userAuthorization.auth, userController.createAdmin);
 
 router
   .route("/me/users")
@@ -29,13 +30,16 @@ router
 router
   .route("/me/admins&users")
   .get(userAuthorization.auth, userController.getAllAdminsAndUsers);
+
 router
   .route("/admins/users")
   .get(userAuthorization.adminAuth, userController.getAllUsers)
   .post(userAuthorization.adminAuth, userController.createUserByAdmin);
+
 router
   .route("/admins/me")
   .get(userAuthorization.adminAuth, userController.getMyProfile);
+
 router
   .route("/users/me")
   .get(userAuthorization.userAuth, userController.getMyProfile);
@@ -46,7 +50,7 @@ router
 
 router
   .route("/me/admins/:id")
-  .get(userAuthorization.auth, userController.getUserById);
+  .get(userAuthorization.auth, userController.getAdminById);
 
 router
   .route("/admins/me/users/:id")
@@ -54,9 +58,15 @@ router
 
 router.route("/users/login").post(userController.login);
 
+router.route("/admins/login").post(userController.login);
+
 router
   .route("/me/users/update/:id")
   .patch(userAuthorization.auth, userController.updateUser);
+
+router
+  .route("/me/admins/update/:id")
+  .patch(userAuthorization.auth, userController.updateAdmin);
 
 router
   .route("/admins/me/users/update/:id")
@@ -71,7 +81,11 @@ router
   .delete(userAuthorization.auth, userController.deleteUser);
 
 router
+  .route("/me/admins/delete/:id")
+  .delete(userAuthorization.auth, userController.deleteAdmin);
+
+router
   .route("/admins/me/users/delete/:id")
-  .delete(userAuthorization.adminAuth, userController.deleteUserByAdmin);
+  .delete(userAuthorization.adminAuth, userController.deleteUser);
 
 module.exports = router;

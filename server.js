@@ -1,11 +1,13 @@
 require("dotenv").config();
-const router = require("./routers/userRouter");
+const UserRouter = require("./routers/userRouter");
+const PostRouter = require("./routers/postRouter");
 
 const express = require("express");
 const app = express();
 
 app.use(express.json());
-app.use(router);
+app.use(UserRouter);
+app.use(PostRouter);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

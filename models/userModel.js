@@ -1,4 +1,5 @@
 require("../db/connection");
+const { ApprovedPost, PendingPost } = require("./postModel");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
@@ -59,21 +60,17 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
-    // avatars: {
-    //   type: Buffer,
-    //   required: true,
-    // },
   },
   {
     timestamps: true,
   }
 );
 
-// userSchema.virtual("posts", {
-//     ref: "Post",
-//     localField: "_id",
-//     foreignField: "owner",
-//   });
+userSchema.virtual("posts", {
+  ref: "Post",
+  localField: "_id",
+  foreignField: "owner",
+});
 
 userSchema.methods.toJSON = function () {
   const userObject = this.toObject();
@@ -103,6 +100,11 @@ userSchema.statics.findByCredentials = async (email, password) => {
   if (!isMatch) throw new Error("Unable to login");
   return user;
 };
+
+userSchema.pre("remove", async function (next) {
+  await Post.deleteMany({ owner: this._id });
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 

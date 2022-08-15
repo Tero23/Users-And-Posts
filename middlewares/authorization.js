@@ -1,3 +1,4 @@
+require("dotenv").config();
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 
@@ -8,11 +9,10 @@ exports.auth = async function (req, res, next) {
     const user = await User.findOne({
       _id: decoded._id,
       "tokens.token": token,
-      role: "superAdmin",
     });
     if (!user) throw new Error();
-    // if (!user.role === "superAdmin")
-    //   throw new Error("You are not a super admin!");
+    if (user.role !== "superAdmin")
+      throw new Error("You are not a super admin!");
     req.token = token;
     req.user = user;
     next();
@@ -28,7 +28,6 @@ exports.adminAuth = async function (req, res, next) {
     const user = await User.findOne({
       _id: decoded._id,
       "tokens.token": token,
-      role: "admin",
     });
     if (!user) throw new Error();
     if (user.role === "user")
@@ -48,7 +47,6 @@ exports.userAuth = async function (req, res, next) {
     const user = await User.findOne({
       _id: decoded._id,
       "tokens.token": token,
-      role: "user",
     });
     if (!user) throw new Error();
     req.token = token;
