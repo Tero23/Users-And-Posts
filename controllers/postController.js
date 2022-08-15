@@ -25,6 +25,7 @@ exports.createPost = async (req, res) => {
 exports.approvePostById = async (req, res) => {
   try {
     const post = await Post.findById({ _id: req.params.id });
+    if (post.status === "Approved") throw new Error("Post already Approved!");
     post.status = "Approved";
     await post.save();
     res.status(200).json({ message: "Post Approved!", post: post.text });
@@ -48,6 +49,12 @@ exports.rejectPostById = async (req, res) => {
 exports.deletePostById = async (req, res) => {
   try {
     const post = await Post.findById({ _id: req.params.id });
+    if (
+      req.user.role === "user" &&
+      req.user._id.toString() !== post.owner.toString()
+    ) {
+      throw new Error("You cannot delete other's posts!");
+    }
     await post.remove();
     res.status(200).json({ message: "Post deleted!", post: post.text });
   } catch (error) {

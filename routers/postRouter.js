@@ -33,11 +33,8 @@ router
 
 router
   .route("/me/posts/pending/:id")
-  .get(authorization.auth, postController.approvePostById);
-
-router
-  .route("/me/posts/pending/:id")
-  .get(authorization.auth, postController.rejectPostById);
+  .get(authorization.auth, postController.approvePostById)
+  .delete(authorization.auth, postController.rejectPostById);
 
 router
   .route("/admins/me/posts/pending/:id")
