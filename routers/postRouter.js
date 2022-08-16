@@ -1,30 +1,82 @@
+const path = require("path");
 require("dotenv").config();
 const postController = require("../controllers/postController");
 const authorization = require("../middlewares/authorization");
+const Post = require("../models/postModel");
 
 const express = require("express");
 const router = express.Router();
 
 const multer = require("multer");
 
-const upload = multer({
-  limits: {
-    fileSize: 1000000,
+const ImageDirectoryPath = path.join(__dirname, "../images");
+
+// const upload = multer({
+//   limits: {
+//     fileSize: 1000000,
+//   },
+//   fileFilter(req, file, cb) {
+//     if (!file.originalname.match(/\.(jpe?g|png)$/))
+//       return cb(new Error("Please upload an image"));
+//     cb(undefined, true);
+//   },
+// });
+
+const multerConfig = {
+  storage: multer.diskStorage({
+    //Setup where the user's file will go
+    destination: function (req, file, next) {
+      next(null, "images");
+    },
+
+    //Then give the file a unique name
+    filename: function (req, file, next) {
+      // console.log(file);
+      const ext = file.mimetype.split("/")[1];
+      next(null, +Date.now() + "." + file.originalname);
+    },
+  }),
+
+  //A means of ensuring only images are uploaded.
+  fileFilter: function (req, file, next) {
+    if (!file) {
+      next();
+    }
+    const image = file.mimetype.startsWith("image/");
+    if (image) {
+      console.log("photo uploaded");
+      next(null, true);
+    } else {
+      console.log("file not supported");
+
+      return next();
+    }
   },
-  dest: "images",
-  fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpe?g|png)$/))
-      return cb(new Error("Please upload an image"));
-    cb(undefined, true);
-  },
-});
+};
 
 router
   .route("/users/me/posts")
   .post(
     authorization.userAuth,
-    upload.single("image"),
-    postController.createPost
+    multer(multerConfig).single("image"),
+    async (req, res) => {
+      console.log(req.file);
+      try {
+        const post = new Post({
+          image: req.file.filename,
+          text: req.body.text,
+          owner: req.user._id,
+          status: "Pending",
+        });
+        await post.save();
+        res.status(201).json({
+          message: "Post created, wait for approval!",
+          postPath: ImageDirectoryPath,
+        });
+      } catch (error) {
+        res.status(500).send(error.message);
+      }
+    }
   );
 
 router

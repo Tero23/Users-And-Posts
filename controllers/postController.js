@@ -1,6 +1,8 @@
 const path = require("path");
 const Post = require("../models/postModel");
 require("../db/connection");
+const multer = require("multer");
+const upload = multer({ dest: "images/" });
 
 const ImageDirectoryPath = path.join(__dirname, "../images");
 
@@ -13,6 +15,7 @@ exports.createPost = async (req, res) => {
       status: "Pending",
     });
     await post.save();
+    console.log(req.file);
     res.status(201).json({
       message: "Post created, wait for approval!",
       postPath: ImageDirectoryPath,
