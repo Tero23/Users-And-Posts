@@ -9,13 +9,13 @@ const ImageDirectoryPath = path.join(__dirname, "../images");
 exports.createPost = async (req, res) => {
   try {
     const post = new Post({
-      image: ImageDirectoryPath,
+      image: req.file.filename,
       text: req.body.text,
-      owner: req.user._id,
+      ownerId: req.user._id,
+      ownerName: req.user.username,
       status: "Pending",
     });
     await post.save();
-    console.log(req.file);
     res.status(201).json({
       message: "Post created, wait for approval!",
       postPath: ImageDirectoryPath,
@@ -54,7 +54,7 @@ exports.deletePostById = async (req, res) => {
     const post = await Post.findById({ _id: req.params.id });
     if (
       req.user.role === "user" &&
-      req.user._id.toString() !== post.owner.toString()
+      req.user._id.toString() !== post.ownerId.toString()
     ) {
       throw new Error("You cannot delete other's posts!");
     }
@@ -87,15 +87,6 @@ exports.getAllPendingPosts = async (req, res) => {
 exports.getAllApprovedPosts = async (req, res) => {
   try {
     const posts = await Post.find({ status: "Approved" });
-    res.status(200).json({ count: posts.length, posts });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
-exports.getAllPosts = async (req, res) => {
-  try {
-    const posts = await Post.find({});
     res.status(200).json({ count: posts.length, posts });
   } catch (error) {
     res.status(500).send(error.message);
