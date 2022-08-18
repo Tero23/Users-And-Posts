@@ -3,92 +3,70 @@ const Post = require("../models/postModel");
 require("../db/connection");
 const multer = require("multer");
 const upload = multer({ dest: "images/" });
+const catchAsync = require("../utils/catchAsync");
+const AppError = require("../utils/appError");
 
 const ImageDirectoryPath = path.join(__dirname, "../images");
 
-exports.createPost = async (req, res) => {
-  try {
-    const post = new Post({
-      image: req.file.filename,
-      text: req.body.text,
-      ownerId: req.user._id,
-      ownerName: req.user.username,
-      status: "Pending",
-    });
-    await post.save();
-    res.status(201).json({
-      message: "Post created, wait for approval!",
-      postPath: ImageDirectoryPath,
-    });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
+exports.createPost = catchAsync(async (req, res, next) => {
+  const post = new Post({
+    image: req.file.filename,
+    text: req.body.text,
+    ownerId: req.user._id,
+    ownerName: req.user.username,
+    status: "Pending",
+  });
+  await post.save();
+  res.status(201).json({
+    message: "Post created, wait for approval!",
+    post: post.text,
+  });
+});
 
-exports.approvePostById = async (req, res) => {
-  try {
-    const post = await Post.findById({ _id: req.params.id });
-    if (post.status === "Approved") throw new Error("Post already Approved!");
-    post.status = "Approved";
-    await post.save();
-    res.status(200).json({ message: "Post Approved!", post: post.text });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
+exports.approvePostById = catchAsync(async (req, res, next) => {
+  const post = await Post.findById({ _id: req.params.id });
+  if (!post) return next(new AppError("There is no post with that ID!", 404));
+  if (post.status === "Approved")
+    return next(new AppError("Post already Approved!", 304));
+  post.status = "Approved";
+  await post.save();
+  res.status(200).json({ message: "Post Approved!", post: post.text });
+});
 
-exports.rejectPostById = async (req, res) => {
-  try {
-    const post = await Post.findById({ _id: req.params.id });
-    await post.remove();
-    res
-      .status(200)
-      .json({ message: "Post Rejected and removed!", post: post.text });
-  } catch (error) {
-    res.status(500).send(message.error);
-  }
-};
+exports.rejectPostById = catchAsync(async (req, res, next) => {
+  const post = await Post.findById({ _id: req.params.id });
+  if (!post) return next(new AppError("There is no post with that ID!", 404));
+  await post.remove();
+  res
+    .status(200)
+    .json({ message: "Post Rejected and removed!", post: post.text });
+});
 
-exports.deletePostById = async (req, res) => {
-  try {
-    const post = await Post.findById({ _id: req.params.id });
-    if (
-      req.user.role === "user" &&
-      req.user._id.toString() !== post.ownerId.toString()
-    ) {
-      throw new Error("You cannot delete other's posts!");
-    }
-    await post.remove();
-    res.status(200).json({ message: "Post deleted!", post: post.text });
-  } catch (error) {
-    res.status(500).send(error.message);
+exports.deletePostById = catchAsync(async (req, res, next) => {
+  const post = await Post.findById({ _id: req.params.id });
+  if (!post) return next(new AppError("There is no post with that ID!", 404));
+  if (
+    req.user.role === "user" &&
+    req.user._id.toString() !== post.ownerId.toString()
+  ) {
+    return next("You cannot delete other's posts!", 403);
   }
-};
+  await post.remove();
+  res.status(200).json({ message: "Post deleted!", post: post.text });
+});
 
-exports.getPostById = async (req, res) => {
-  try {
-    const post = await Post.findById({ _id: req.params.id });
-    if (!post) throw new Error("There is no post with that id!");
-    res.status(200).json({ post });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
+exports.getPostById = catchAsync(async (req, res, next) => {
+  const post = await Post.findById({ _id: req.params.id });
+  if (!post) return next(new AppError("There is no post with that ID!", 404));
+  res.status(200).json({ post });
+});
 
-exports.getAllPendingPosts = async (req, res) => {
-  try {
-    const posts = await Post.find({ status: "Pending" });
-    res.status(200).json({ count: posts.length, posts });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
+exports.getAllPendingPosts = catchAsync(async (req, res, next) => {
+  const posts = await Post.find({ status: "Pending" });
+  res.status(200).json({ count: posts.length, posts });
+});
 
-exports.getAllApprovedPosts = async (req, res) => {
-  try {
-    const posts = await Post.find({ status: "Approved" });
-    res.status(200).json({ count: posts.length, posts });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
+exports.getAllApprovedPosts = catchAsync(async (req, res, next) => {
+  const posts = await Post.find({ status: "Approved" });
+  res.status(200).json({ count: posts.length, posts });
+});
