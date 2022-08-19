@@ -1,5 +1,5 @@
 require("../db/connection");
-const { ApprovedPost, PendingPost } = require("./postModel");
+const Post = require("./postModel");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true,
       minlength: 3,
     },
     role: {

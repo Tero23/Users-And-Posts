@@ -69,6 +69,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findByCredentials(req.body.email, req.body.password);
+  console.log(user);
   if (!user || user.deletedAt !== undefined)
     return next(new AppError("There is no such user!", 404));
   const token = await user.generateAuthTokens();

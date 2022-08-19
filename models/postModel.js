@@ -11,13 +11,13 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    ownerId: {
+    // ownerId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   required: true,
+    //   ref: "User",
+    // },
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
-    ownerName: {
-      type: String,
       required: true,
       ref: "User",
     },

@@ -24,10 +24,10 @@ app.listen(port, () => {
   console.log("Server is up and running at port keziInch!");
 });
 
-process.on("unhandledRejection", (err) => {
-  console.log(err.name, err.message);
-  console.log("Unhandled Rejection! Shutting down!");
-  server.close(() => {
-    process.exit(1);
-  });
-});
+// process.on("unhandledRejection", (err) => {
+//   console.log(err.name, err.message);
+//   console.log("Unhandled Rejection! Shutting down!");
+//   server.close(() => {
+//     process.exit(1);
+//   });
+// });
