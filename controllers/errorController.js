@@ -29,6 +29,7 @@ const sendErrorDev = (err, res) => {
 const sendErrorProd = (err, res) => {
   // Operational, trusted error: send message to the client
   if (err.isOperational) {
+    // console.log("Hello", err.statusCode, err.message, err.status);
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
@@ -54,7 +55,10 @@ module.exports = (err, req, res, next) => {
     console.log(error);
     if (error.kind === "ObjectId") error = handleCastErrorDB(error);
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error._message === "User validation failed")
+    if (
+      error._message === "User validation failed" ||
+      error._message === "Post validation failed"
+    )
       error = handleValidationErrorDB(error);
     sendErrorProd(error, res);
   }

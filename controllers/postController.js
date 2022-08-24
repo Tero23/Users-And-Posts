@@ -26,7 +26,7 @@ exports.approvePostById = catchAsync(async (req, res, next) => {
   );
   if (!post) return next(new AppError("There is no post with that ID!", 404));
   if (post.status === "Approved")
-    return next(new AppError("Post already Approved!", 304));
+    return next(new AppError("Post already Approved!", 400));
   post.status = "Approved";
   await post.save();
   res.status(200).json({ message: "Post Approved!", post: post.text });
@@ -54,7 +54,7 @@ exports.deletePostById = catchAsync(async (req, res, next) => {
     req.user.role === "user" &&
     req.user._id.toString() !== post.owner.toString()
   ) {
-    return next("You cannot delete other's posts!", 403);
+    return next(new AppError("You cannot delete other's posts!", 403));
   }
   await post.remove();
   res.status(200).json({ message: "Post deleted!", post: post.text });

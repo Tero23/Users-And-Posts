@@ -5,11 +5,11 @@ const postSchema = new mongoose.Schema(
   {
     image: {
       type: String,
-      required: true,
+      required: [true, "An image is required!"],
     },
     text: {
       type: String,
-      required: true,
+      required: [true, "A text is required!"],
     },
     // ownerId: {
     //   type: mongoose.Schema.Types.ObjectId,
@@ -18,13 +18,16 @@ const postSchema = new mongoose.Schema(
     // },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      required: [true, "A post must have an owner!"],
       ref: "User",
     },
     status: {
       type: String,
-      enum: ["Pending", "Approved"],
-      required: true,
+      enum: {
+        values: ["Pending", "Approved"],
+        message: "The status must be either Pending or Approved!",
+      },
+      required: [true, "A post must have a status!"],
     },
   },
   {
