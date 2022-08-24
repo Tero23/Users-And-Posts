@@ -4,50 +4,53 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const AppError = require("../utils/appError");
 
 const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, "Please enter username!"],
       trim: true,
       unique: true,
-      minlength: 3,
+      minlength: [3, "Minimum username length must be of 3 characters!"],
     },
     role: {
       type: String,
-      required: true,
-      enum: ["user", "admin", "superAdmin"],
+      required: [true, "Please enter the user role!"],
+      enum: {
+        values: ["user", "admin", "superAdmin"],
+        message: "Role is either user, admin or superAdmin!",
+      },
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Please enter your email!"],
       trim: true,
       unique: true,
-      validate(value) {
-        if (!validator.isEmail(value))
-          throw new Error("Invalid email structure!");
+      validate: {
+        validator: function (value) {
+          // this only points to current doc on NEW document creation
+          return validator.isEmail(value);
+        },
+        message: "Invalid email structure!",
       },
     },
     password: {
       type: String,
-      required: true,
-      minlength: 10,
-      validate(value) {
-        if (!/[a-z]/g.test(value))
-          throw new Error(
-            "Your password must contain at least 1 lowercase letter!"
+      required: [true, "Please enter a password!"],
+      minlength: [10, "Password length must be at least 10 characters long!"],
+      validate: {
+        validator: function (value) {
+          return (
+            /[a-z]/g.test(value) &&
+            /[A-Z]/g.test(value) &&
+            /\W/g.test(value) &&
+            /\d/g.test(value)
           );
-        if (!/[A-Z]/g.test(value))
-          throw new Error(
-            "Your password must contain at least 1 uppercase letter!"
-          );
-        if (!/\W/g.test(value))
-          throw new Error(
-            "Your password must contain at least 1 special character!"
-          );
-        if (!/\d/g.test(value))
-          throw new Error("Your password must contain at least 1 digit!");
+        },
+        message:
+          "Your password must contain at least 1 lowerCase letter at least 1 upperCase letter at least 1 digit and at least 1 special character!",
       },
     },
     deletedAt: {
@@ -57,7 +60,7 @@ const userSchema = new mongoose.Schema(
       {
         token: {
           type: String,
-          required: true,
+          required: [true, "A token is required!"],
         },
       },
     ],
@@ -96,9 +99,9 @@ userSchema.methods.generateAuthTokens = async function () {
 
 userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
-  if (!user) throw new Error("Unable to login");
+  if (!user)  throw new AppError("Unable to login", 400);
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new Error("Unable to login");
+  if (!isMatch)  throw new AppError("Unable to login", 400);
   return user;
 };
 

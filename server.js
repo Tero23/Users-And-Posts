@@ -2,6 +2,13 @@ require("dotenv").config();
 const UserRouter = require("./routers/userRouter");
 const PostRouter = require("./routers/postRouter");
 const globalErrorHandler = require("./controllers/errorController");
+const AppError = require("./utils/appError");
+
+process.on("uncaughtException", (err) => {
+  console.log("Uncaught Exception!!! Shutting down...");
+  console.log(err.name, err.message);
+  process.exit(1);
+});
 
 const express = require("express");
 const app = express();
@@ -11,10 +18,7 @@ app.use(UserRouter);
 app.use(PostRouter);
 
 app.all("*", (req, res, next) => {
-  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
-  err.status = "fail";
-  err.statusCode = 404;
-  next(err);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 app.use(globalErrorHandler);
@@ -24,10 +28,10 @@ app.listen(port, () => {
   console.log("Server is up and running at port keziInch!");
 });
 
-// process.on("unhandledRejection", (err) => {
-//   console.log(err.name, err.message);
-//   console.log("Unhandled Rejection! Shutting down!");
-//   server.close(() => {
-//     process.exit(1);
-//   });
-// });
+process.on("unhandledRejection", (err) => {
+  console.log("Unhandled Rejection! Shutting down...");
+  console.log(err.name, err.message);
+  app.close(() => {
+    process.exit(1);
+  });
+});

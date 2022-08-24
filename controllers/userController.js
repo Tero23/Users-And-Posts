@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 require("../db/connection");
 const joi = require("joi");
 const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
+const AppError = require("./../utils/appError");
 
 exports.getUsers = catchAsync(async (req, res, next) => {
   const role = req.query.role;
