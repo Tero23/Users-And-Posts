@@ -91,7 +91,9 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.generateAuthTokens = async function () {
-  const token = jwt.sign({ _id: this._id.toString() }, process.env.JWT_SECRET);
+  const token = jwt.sign({ _id: this._id.toString() }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
   this.tokens = this.tokens.concat({ token });
   await this.save();
   return token;
@@ -99,9 +101,9 @@ userSchema.methods.generateAuthTokens = async function () {
 
 userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
-  if (!user)  throw new AppError("Unable to login", 400);
+  if (!user) throw new AppError("Unable to login", 400);
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch)  throw new AppError("Unable to login", 400);
+  if (!isMatch) throw new AppError("Unable to login", 400);
   return user;
 };
 

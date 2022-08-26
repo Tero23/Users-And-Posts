@@ -33,11 +33,12 @@ exports.approvePostById = catchAsync(async (req, res, next) => {
 });
 
 exports.rejectPostById = catchAsync(async (req, res, next) => {
-  const post = await Post.findById({ _id: req.params.id }).populate(
-    "owner",
-    "username"
-  );
-  if (!post) return next(new AppError("There is no post with that ID!", 404));
+  const post = await Post.findOne({
+    _id: req.params.id,
+    status: "Pending",
+  }).populate("owner", "username");
+  if (!post)
+    return next(new AppError("There is no pending post with that ID!", 404));
   await post.remove();
   res
     .status(200)

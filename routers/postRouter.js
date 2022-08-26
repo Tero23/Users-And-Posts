@@ -41,26 +41,51 @@ const multerConfig = {
 //Accessable by admins and the superAdmin
 router
   .route("/posts/pending")
-  .get(authorization.adminAuth, postController.getAllPendingPosts);
+  .get(
+    authorization.auth,
+    authorization.restrictTo("admin", "superAdmin"),
+    postController.getAllPendingPosts
+  );
 
 //Accessable by admins and the superAdmin
 router
   .route("/posts/pending/:id")
-  .get(authorization.adminAuth, postController.approvePostById)
-  .delete(authorization.adminAuth, postController.rejectPostById);
+  .get(
+    authorization.auth,
+    authorization.restrictTo("admin", "superAdmin"),
+    postController.approvePostById
+  )
+  .delete(
+    authorization.auth,
+    authorization.restrictTo("admin", "superAdmin"),
+    postController.rejectPostById
+  );
 
 //Accessable by Everyone. But a user can only delete his/her post
 router
   .route("/posts/:id")
-  .delete(authorization.userAuth, postController.deletePostById)
-  .get(authorization.userAuth, postController.getPostById);
+  .delete(
+    authorization.auth,
+    authorization.restrictTo("user", "admin", "superAdmin"),
+    postController.deletePostById
+  )
+  .get(
+    authorization.auth,
+    authorization.restrictTo("user", "admin", "superAdmin"),
+    postController.getPostById
+  );
 
 //Accessable by Everyone. Case of users it is simply getting all the posts... Since pending posts are not accessable by users.
 router
   .route("/posts")
-  .get(authorization.userAuth, postController.getAllApprovedPosts)
+  .get(
+    authorization.auth,
+    authorization.restrictTo("user", "admin", "superAdmin"),
+    postController.getAllApprovedPosts
+  )
   .post(
-    authorization.userAuth,
+    authorization.auth,
+    authorization.restrictTo("user", "admin", "superAdmin"),
     multer(multerConfig).single("image"),
     postController.createPost
   );

@@ -8,18 +8,42 @@ const router = express.Router();
 
 router
   .route("/users")
-  .get(userAuthorization.userAuth, userController.getUsers)
-  .post(userAuthorization.adminAuth, userController.createUser);
+  .get(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("user", "admin", "superAdmin"),
+    userController.getUsers
+  )
+  .post(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("admin", "superAdmin"),
+    userController.createUser
+  );
 
 router
   .route("/users/me")
-  .get(userAuthorization.userAuth, userController.getMyProfile);
+  .get(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("user", "admin", "superAdmin"),
+    userController.getMyProfile
+  );
 
 router
   .route("/users/:id")
-  .get(userAuthorization.adminAuth, userController.getUserById)
-  .patch(userAuthorization.adminAuth, userController.updateUser)
-  .delete(userAuthorization.userAuth, userController.deleteUser);
+  .get(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("admin", "superAdmin"),
+    userController.getUserById
+  )
+  .patch(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("admin", "superAdmin"),
+    userController.updateUser
+  )
+  .delete(
+    userAuthorization.auth,
+    userAuthorization.restrictTo("user", "admin", "superAdmin"),
+    userController.deleteUser
+  );
 
 router.route("/users/login").post(userController.login);
 
