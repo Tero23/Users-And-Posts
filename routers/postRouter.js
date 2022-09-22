@@ -2,7 +2,6 @@ const path = require("path");
 require("dotenv").config();
 const postController = require("../controllers/postController");
 const authorization = require("../middlewares/authorization");
-const Post = require("../models/postModel");
 
 const express = require("express");
 const router = express.Router();

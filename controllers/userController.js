@@ -83,7 +83,8 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
-  if (!isValidOperation) res.status(404).send({ message: "Invalid Update!" });
+  if (!isValidOperation)
+    return res.status(404).send({ message: "Invalid Update!" });
   const user = await User.findOne({ _id: req.params.id });
   if (!user) {
     return next(new AppError("No user found with that ID!", 404));

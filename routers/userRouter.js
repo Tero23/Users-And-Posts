@@ -1,5 +1,4 @@
 require("dotenv").config();
-const User = require("../models/userModel");
 const userController = require("../controllers/userController");
 const userAuthorization = require("../middlewares/authorization");
 
